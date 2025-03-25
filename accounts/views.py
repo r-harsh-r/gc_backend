@@ -1,13 +1,14 @@
 from django.contrib.auth import authenticate
-from django.http import JsonResponse
-import json
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework_simplejwt.tokens import RefreshToken
-
 from django.contrib.auth.models import User
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 import json
 
+# Function to generate JWT tokens for a user
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -15,53 +16,45 @@ def get_tokens_for_user(user):
         'access': str(refresh.access_token),
     }
 
-@csrf_exempt
-def login_view(request):
-    if request.method == "POST":
+# ✅ Class-based LoginView
+class LoginView(APIView):
+    def post(self, request):
         try:
             data = json.loads(request.body)
             email = data.get("email")
             password = data.get("password")
 
             user = authenticate(username=email, password=password)
-
             if user is not None:
                 tokens = get_tokens_for_user(user)
-                return JsonResponse({
+                return Response({
                     "token": tokens["access"],
                     "user": {
                         "id": user.id,
                         "name": user.get_full_name(),
                         "role": "employee"
                     }
-                })
+                }, status=status.HTTP_200_OK)
             else:
-                return JsonResponse({"error": "Invalid credentials"}, status=400)
+                return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
         except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON format"}, status=400)
+            return Response({"error": "Invalid JSON format"}, status=status.HTTP_400_BAD_REQUEST)
 
-    return JsonResponse({"error": "Only POST method allowed"}, status=405)
-
-
-def register_view(request):
-    if request.method == "POST":
+# ✅ Class-based RegisterView
+class RegisterView(APIView):
+    def post(self, request):
         try:
             data = json.loads(request.body)
             email = data.get("email")
             username = email  # Use email as username
             password = data.get("password")
 
-            # Check if user already exists
             if User.objects.filter(email=email).exists():
-                return JsonResponse({"error": "User already exists"}, status=400)
+                return Response({"error": "User already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Create user
             user = User.objects.create_user(username=username, email=email, password=password)
             user.save()
 
-            return JsonResponse({"message": "User registered successfully"}, status=201)
-
+            return Response({"message": "User registered successfully"}, status=status.HTTP_201_CREATED)
         except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON format"}, status=400)
-
-    return JsonResponse({"error": "Only POST method allowed"}, status=405)
+            return Response({"error": "Invalid JSON format"}, status=status.HTTP_400_BAD_REQUEST)
