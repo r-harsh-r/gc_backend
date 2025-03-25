@@ -23,4 +23,5 @@ urlpatterns = [
     # path('login/', views.login,name = 'login'),
     path('login/', include('accounts.urls')),
     path('', include('accounts.urls')),
+    path('organization/', include('organization.urls')),
 ]
