@@ -1,14 +1,5 @@
 from rest_framework import serializers
-from .models import Employee
-
-class EmployeeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Employee
-        fields = '__all__'
-
-
-from rest_framework import serializers
-from .models import Employee, MoodHistory, Activity, Reward, CalendarEvent, Task
+from .models import Employee, MoodHistory, Activity, Reward, Calendar, UpcomingTask
 
 class MoodHistorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,21 +18,26 @@ class RewardSerializer(serializers.ModelSerializer):
 
 class CalendarSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CalendarEvent
+        model = Calendar
         fields = ['event', 'date']
 
-class TaskSerializer(serializers.ModelSerializer):
+class UpcomingTaskSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Task
+        model = UpcomingTask
         fields = ['task', 'due']
 
+class EmployeeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employee
+        fields = '__all__'
+
 class EmployeeDetailSerializer(serializers.ModelSerializer):
-    mood_history = MoodHistorySerializer(many=True, source="moodhistory_set")
-    activity = ActivitySerializer(many=True, source="activity_set")
-    rewards = RewardSerializer(many=True, source="reward_set")
-    calendar = CalendarSerializer(many=True, source="calendarevent_set")
-    upcoming_tasks = TaskSerializer(many=True, source="task_set")
+    mood_history = MoodHistorySerializer(many=True)
+    activities = ActivitySerializer(many=True)
+    rewards = RewardSerializer(many=True)
+    calendar_events = CalendarSerializer(many=True)
+    upcoming_tasks = UpcomingTaskSerializer(many=True)
 
     class Meta:
         model = Employee
-        fields = ['employee_id', 'name', 'post', 'mood_history', 'activity', 'rewards', 'calendar', 'upcoming_tasks']
+        fields = ['employee_id', 'name', 'post', 'mood_history', 'activities', 'rewards', 'calendar_events', 'upcoming_tasks']
